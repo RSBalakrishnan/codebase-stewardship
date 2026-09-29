@@ -1,0 +1,19 @@
+# Merge into the repo's pyproject.toml. Adapt paths to the real layout.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --import-mode=importlib"
+markers = [
+    "unit: fast, no I/O, uses fakes",
+    "contract: one suite run against EVERY implementation of an abstraction",
+    "integration: needs real services (vector store, DB) in containers",
+    "regression: protects a past bug or pinned behaviour; must always run on every PR",
+    "eval: retrieval/answer-quality set; slower, compares metrics to a stored baseline",
+    "slow: excluded from the default PR run",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM", "C4", "PT", "RET"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true            # apply to new modules first; ratchet older ones over time
