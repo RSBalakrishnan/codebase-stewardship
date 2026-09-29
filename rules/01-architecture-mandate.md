@@ -69,37 +69,32 @@
 
 ---
 
-## 3. Standard Layered File Structure
+## 3. Required Architectural Layers (Technology-Agnostic)
 
-### For Backend Projects (Hexagonal / Clean Architecture):
-```
-src/modules/<bounded_context>/
-├── domain/                  # PURE DOMAIN LAYER (Zero external dependencies)
-│   ├── models.py            # Domain Entities, Value Objects (Pydantic / Dataclasses)
-│   └── interfaces.py        # Ports: Abstract Base Classes (ABC) defining contracts
-├── application/             # APPLICATION / USE CASE LAYER (Business Orchestration)
-│   ├── dtos.py              # Input / Output Data Transfer Objects
-│   └── *_use_case.py        # Single-purpose orchestrators; depends ONLY on domain ports
-├── infrastructure/          # ADAPTERS LAYER (Technical Details & External Services)
-│   ├── orm_models.py        # SQLAlchemy ORM models (isolated from domain entities)
-│   ├── repositories.py      # Repository implementations of domain ports
-│   └── adapters/            # External API clients, AST parsers, LLM drivers, etc.
-└── presentation/            # PRESENTATION / DELIVERY LAYER (HTTP & API)
-    ├── schemas.py           # FastAPI request / response Pydantic schemas
-    └── *_routes.py          # FastAPI APIRouter endpoints; invokes use cases via DI
-```
+The folder/file naming convention varies by framework and language — **that is expected and correct**. What must NEVER vary is the **separation of concerns** between these four layers:
 
-### For Frontend Projects:
-```
-src/
-├── types/ or domain/        # Domain models, API contract interfaces, Enums
-├── services/ or api/        # Typed API clients & transport adapters
-├── hooks/                   # Custom hooks encapsulating state, effects, and business workflows
-├── components/              # Single-responsibility, reusable UI components (< 150 lines)
-│   ├── common/              # Shared design system components (buttons, modals, inputs)
-│   └── <feature>/           # Feature-specific composite components
-└── views/ or pages/         # Page-level route views (coordinates components & hooks)
-```
+| Layer | Responsibility | Must NOT contain |
+| :--- | :--- | :--- |
+| **Domain / Core** | Business entities, value objects, domain rules, abstract interfaces (ports) | I/O, framework imports, database calls |
+| **Application / Use Cases** | Orchestrates domain objects to fulfil a single business use case | Direct DB calls, HTTP logic, UI concerns |
+| **Infrastructure / Adapters** | Implements domain ports: DB repos, external API clients, file I/O | Business rules, domain logic |
+| **Presentation / Delivery** | HTTP routes, CLI handlers, event consumers — maps I/O to use cases | Business logic, DB queries |
+
+**Adapt the naming to your stack:**
+
+- **Python + FastAPI** → `domain/`, `application/`, `infrastructure/`, `presentation/`
+- **Node.js + Express** → `models/`, `services/`, `repositories/`, `controllers/`
+- **Spring Boot (Java)** → `entity/`, `service/`, `repository/`, `controller/`
+- **Django** → `models/`, `services/`, `selectors/`, `views/`
+- **Next.js (Frontend)** → `domain/`, `services/` or `api/`, `hooks/`, `components/`, `app/` or `pages/`
+
+**The non-negotiable rules regardless of naming:**
+
+1. **Domain layer has zero dependencies** on infrastructure, frameworks, or external libraries.
+2. **Business logic lives in Domain/Application** — never in routes, controllers, or views.
+3. **Dependency direction is always inward**: Presentation → Application → Domain ← Infrastructure.
+4. **Infrastructure depends on Domain abstractions** (interfaces/ports), not the other way around.
+5. **Each bounded context / feature module** is self-contained with its own layers. Avoid cross-module direct imports; go through public APIs.
 
 ---
 
